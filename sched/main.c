@@ -18,6 +18,7 @@ FORWARD _PROTOTYPE( void sef_local_startup, (void)			);
  *===========================================================================*/
 PUBLIC int main(void)
 {
+
 	/* Main routine of the scheduler. */
 	message m_in;	/* the incoming message itself is kept here. */
 	int call_nr;	/* system call number */
@@ -30,11 +31,11 @@ PUBLIC int main(void)
 
 	/* Initialize scheduling timers, used for running balance_queues */
 	init_scheduling();
-
+    printf(" inside main\n");
 	/* This is SCHED's main loop - get work and do it, forever and forever. */
 	while (TRUE) {
-		int ipc_status;
 
+		int ipc_status;
 		/* Wait for the next message and extract useful information from it. */
 		if (sef_receive_status(ANY, &m_in, &ipc_status) != OK)
 			panic("SCHED sef_receive error");
@@ -57,9 +58,11 @@ PUBLIC int main(void)
 		switch(call_nr) {
 		case SCHEDULING_INHERIT:
 		case SCHEDULING_START:
+
 			result = do_start_scheduling(&m_in);
 			break;
 		case SCHEDULING_STOP:
+
 			result = do_stop_scheduling(&m_in);
 			break;
 		case SCHEDULING_SET_NICE:
