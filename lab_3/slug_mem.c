@@ -12,7 +12,7 @@ struct _Node {
 	Node prev;
 };
 
-struct Mem {
+struct _Mem {
     Node first;
 	Node last;
 	Node current;
