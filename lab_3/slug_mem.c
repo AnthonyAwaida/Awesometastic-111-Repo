@@ -110,6 +110,7 @@ void *slug_malloc (size_t size, char *WHERE) {
 	
         /* Insert node */
 	insert_node(new_node);
+	return data_address;
 }
 
 void slug_free ( void *addr, char *WHERE ) {
