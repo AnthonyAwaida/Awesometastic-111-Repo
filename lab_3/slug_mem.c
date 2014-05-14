@@ -2,6 +2,27 @@
 
 Mem memory;
 
+struct _Node {
+        int block_size;
+	void *address;
+	char *caller;
+	time_t time_stamp;
+	char freed;
+	Node next;
+	Node prev;
+};
+
+struct Mem {
+    Node first;
+	Node last;
+	Node current;
+	int mem_size;
+	int num_alloca;  //added this for counter total # of allocations done overall.
+	int total_size;  //added for calculating the mean and SD of all allocation
+	double mean;
+	double SD;
+};
+
 void mem_init (void) {
         memory = malloc(MAX_ALLOC_SIZE);
 	memory->first = NULL;
@@ -46,6 +67,12 @@ void *slug_malloc (size_t size, char *WHERE) {
 
     void *data_address;
 	time_t allocation_time;
+
+	/* check that the allocation is of legal size */
+	if(size >= MAX_ALLOC_SIZE){
+		fprintf(stderr, "ERR: Cannot allocate more than 2^27-1 mb \n");
+		exit(1);
+	}
 	
     /* Allocate a node */
     Node new_node = malloc(sizeof(Node));
