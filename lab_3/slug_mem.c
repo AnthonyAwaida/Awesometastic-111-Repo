@@ -23,20 +23,20 @@ void insert_node (Node node) {
 		memory->last->next = node;
 	        memory->last = node;
 	}
-	memory->current = node;
 	node->next = NULL;
+	node->freed = FALSE;
+	memory->current = node;
 	memory->num_alloca++;  //increase by 1 for each new allocation
 	memory->total_size+=node->block_size;
-	memory->mean = memory->total_size / memory->num_alloca;
+	memory->mean = (double)memory->total_size / memory->num_alloca;
 }
 
 int mem_is_valid (void *address, char *caller) {
     memory->current = memory->first;
-	while (memory->current != NULL) {
+	while (memory->current != NULL && memory->current->freed == FALSE) {
 	    if (memory->current->address == address && memory->current->caller == caller) {
 		    return TRUE;
 		}
-		//doesn't the while loop needs to change the memory->current so it'll loop?  should add:
 	          memory->current = memory->current->next;
 	}
 	return FALSE;
@@ -75,35 +75,36 @@ void *slug_malloc (size_t size, char *WHERE) {
 	new_node->caller = WHERE;
 	
         /* Insert node */
-	insert_node(memory, new_node);  //did you called insert_node wrong?  it takes in a single node parameter 
-	                                // shouldn't it be: insert_node(new_node); ?
+	insert_node(new_node);
 }
 
 void slug_free ( void *addr, char *WHERE ) {
 
     /* Check for memory validity, handles pointers, free memory and the node */
     if (mem_is_valid(addr, WHERE)) {
-	    if (memory->current->prev != NULL) memory->current->prev->next = memory->current->next;
-		if (memory->current->next != NULL) memory->current->next->prev = memory->current->prev;
-		free(memory->current->address);
-	    free(memory->current);
-	}
+	free(memory->current->address);
+	memory->current->freed = TRUE;
+    }
 }
 
 void slug_memstats ( void ) {
-	int Num_active_alloc=1;
-	int total_active_size=0;
+	int Num_active_alloc = 1;
+	int total_active_size = 0;
+	int difference = 0;
         
 	Node node = malloc(sizeof(Node));
 	node = memory->first;
-	while(node !=NULL){
-
-		printf("allocation[%d] %s(%11d) - size: %d, address: % p \n", 
-		        Num_active_alloca, node->caller, node->time_stamp, node->block_size, node->address);
-		Num_active_alloca++;
-		total_active_size += node->block_size;
-		node = node->next;
+	while(node != NULL){
+		if(node->freed == FALSE){
+			printf("allocation[%d] %s(%11d) - size: %d, address: % p \n", 
+		        	Num_active_alloca, node->caller, node->time_stamp, node->block_size, node->address);
+			Num_active_alloca++;
+			total_active_size += node->block_size;
+			node = node->next;
+		}
+		difference += (pow(node->block_size - memory->mean, 2.0));
 	}
+	memory->SD = sqrt(difference);
 
 	printf("----------------------------------------------------------\n");
 	printf("*****               Allocation Summary               *****\n");
