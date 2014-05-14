@@ -54,9 +54,14 @@ void insert_node (Node node) {
 
 int mem_is_valid (void *address, char *caller) {
     memory->current = memory->first;
-	while (memory->current != NULL && memory->current->freed == FALSE) {
-	    if (memory->current->address == address && memory->current->caller == caller) {
+	while (memory->current != NULL ) {
+	    if (memory->current->address == address && memory->current->caller == caller ) {
+	    	if(memory->current->freed == FALSE){
 		    return TRUE;
+	    	}
+	    	else{
+	    	    return FALSE;
+	    	}
 		}
 	          memory->current = memory->current->next;
 	}
@@ -119,7 +124,7 @@ void slug_memstats ( void ) {
 	int total_active_size = 0;
 	int difference = 0;
         
-	Node node = malloc(sizeof(Node));
+	Node node;
 	node = memory->first;
 	while(node != NULL){
 		if(node->freed == FALSE){
