@@ -1,6 +1,6 @@
 // CREATED
 
-Mem memory;
+
 
 struct _Node {
         int block_size;
@@ -22,6 +22,8 @@ struct _Mem {
 	double mean;
 	double SD;
 };
+
+Mem memory;
 
 void mem_init (void) {
         memory = malloc(MAX_ALLOC_SIZE);
