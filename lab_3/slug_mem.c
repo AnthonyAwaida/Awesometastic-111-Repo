@@ -145,4 +145,13 @@ void slug_memstats ( void ) {
 	printf("Total memory size of active allocation: %d\n", total_active_size);
 	printf("Mean: %f   SD: %f\n",memory->mean, memory->SD);
 	printf("----------------------------------------------------------\n");
+	
+	node = memory->first;
+	while(node != NULL){
+		if(node->freed == FALSE){
+			free(node->address);
+		}
+		free(node);
+		node = node->next;
+	}
 }
