@@ -16,7 +16,7 @@
 typedef struct *node Node;
 
 typedef struct Node {
-    int block_size;
+        int block_size;
 	void *address;
 	char *caller;
 	time_t time_stamp;
@@ -25,10 +25,14 @@ typedef struct Node {
 } Node;
 
 typedef struct Mem {
-    Node first;
+        Node first;
 	Node last;
 	Node current;
 	int mem_size;
+	int num_alloca;  //added this for counter total # of allocations done overall.
+	int total_size;  //added for calculating the mean and SD of all allocation
+	double mean;
+	double SD;
 } Mem;
 
 void *slug_malloc (size_t size, char *WHERE);
