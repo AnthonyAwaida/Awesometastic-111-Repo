@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 #include <time.h>
+#include <math.h>
 
 #define malloc(s) slug_malloc((s))
 #define FUNCTIONIZE(a,b) a(b)
@@ -20,6 +21,7 @@ typedef struct Node {
 	void *address;
 	char *caller;
 	time_t time_stamp;
+	char freed;
 	Node next;
 	Node prev;
 } Node;
