@@ -163,6 +163,17 @@ void slug_memstats ( void ) {
 		printf("slug_memstats: freed node\n");
 		node = node->next;
 	}
+<<<<<<< HEAD
+=======
+
+
+}
+
+
+	printf("Total memory size of active allocation: %d\n", total_active_size);
+	printf("Mean: %f   SD: %f\n",memory->mean, memory->SD);
+	printf("----------------------------------------------------------\n");
+>>>>>>> b02dbfb10453a66c46c9e1e511ac701494d095ec
 	
 	node = memory->first;
 	while(node != NULL){
