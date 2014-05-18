@@ -57,13 +57,17 @@ void insert_node (Node *node) {
 
 int mem_is_valid (void *address, char *caller) {
     memory->current = memory->first;
-	while (memory->current != NULL ) {
-	    if (memory->current->address == address && memory->current->caller == caller ) {
+	while (memory->current != NULL) {
+	    if (memory->current->address == address) {
 	    	if(memory->current->freed == FALSE) return TRUE;
-	    	else return FALSE;
+	    	else {
+				printf("%s: Memory address %d is previously freed\n", caller, address);
+			    return FALSE;
+			}
 		}
 	    memory->current = memory->current->next;
 	}
+	printf("%s: Memory address %d is invalid\n", caller, address);
 	return FALSE;
 }
 
@@ -74,7 +78,7 @@ void *slug_malloc (size_t size, char *WHERE) {
 
 	/* check that the allocation is of legal size */
 	if(size >= MAX_ALLOC_SIZE){
-		printf("ERR: Cannot allocate more than 2^27-1 mb \n");
+		printf("%s: Cannot allocate more than 128MB \n", WHERE);
 		return;
 	}
 	
@@ -82,7 +86,7 @@ void *slug_malloc (size_t size, char *WHERE) {
     Node *new_node = malloc(sizeof(Node));
 	/* Handles errors */
 	if (!new_node) {
-	    printf("ERR(%s): Cannot create node\n");
+	    printf("%s: Cannot create node\n", WHERE);
 	    return;
     }
 	
@@ -91,7 +95,7 @@ void *slug_malloc (size_t size, char *WHERE) {
 	/* Handles errors */
 	if (!data_address) {
 	    free(new_node);
-	    printf("ERR(%s): Cannot allocate %d in memory\n");
+	    printf("%s: Cannot allocate %d in memory\n", WHERE);
 	    return;
     }
 	
@@ -173,5 +177,10 @@ void slug_memstats ( void ) {
 		node = node->next;
 	}
 	*/
+}
+
+void slug_exit(void) {
+    
+    slug_memstats();
 }
 
