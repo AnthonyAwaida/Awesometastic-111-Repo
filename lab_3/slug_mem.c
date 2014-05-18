@@ -140,7 +140,7 @@ void slug_memstats ( void ) {
 	printf("*****               Allocation Summary               *****\n");
 	printf("Total number of allocations done: %d\n", memory->num_alloca);
 	printf("Total number of active allocation: %d\n", active_alloc);
-<<<<<<< HEAD
+
 	printf("Total memory size of active allocation: %d\n", total_active_size);
 	printf("Mean: %f   SD: %f\n",memory->mean, memory->SD);
 	printf("----------------------------------------------------------\n");
@@ -153,8 +153,7 @@ void slug_memstats ( void ) {
 		free(node);
 		node = node->next;
 	}
-=======
->>>>>>> FETCH_HEAD
+
 	printf("Total memory size of active allocation: %d\n", total_active_size);
 	printf("Mean: %f   SD: %f\n",memory->mean, memory->SD);
 	printf("----------------------------------------------------------\n");
@@ -167,8 +166,7 @@ void slug_memstats ( void ) {
 		free(node);
 		node = node->next;
 	}
-<<<<<<< HEAD
-=======
+
 	printf("Total memory size of active allocation: %d\n", total_active_size);
 	printf("Mean: %f   SD: %f\n",memory->mean, memory->SD);
 	printf("----------------------------------------------------------\n");
@@ -181,6 +179,6 @@ void slug_memstats ( void ) {
 		free(node);
 		node = node->next;
 	}
->>>>>>> FETCH_HEAD
+
 }
 
