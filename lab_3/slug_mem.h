@@ -1,6 +1,7 @@
 // CREATED
 
 #include <unistd.h>
+#include <stdio.h>
 #include <time.h>
 #include <math.h>
 
@@ -17,7 +18,6 @@
 #define TRUE 1
 
 typedef struct _Node Node;
-
 typedef struct _Mem Mem;
 
 void *slug_malloc (size_t size, char *WHERE);

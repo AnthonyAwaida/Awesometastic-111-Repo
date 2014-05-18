@@ -1,21 +1,20 @@
 // CREATED
-
-
+#include "slug_mem.h"
 
 struct _Node {
-        int block_size;
+    int block_size;
 	void *address;
 	char *caller;
 	time_t time_stamp;
 	char freed;
-	Node next;
-	Node prev;
+	Node *next;
+	Node *prev;
 };
 
 struct _Mem {
-    Node first;
-	Node last;
-	Node current;
+    Node *first;
+	Node *last;
+	Node *current;
 	int mem_size;
 	int num_alloca;  //added this for counter total # of allocations done overall.
 	int total_size;  //added for calculating the mean and SD of all allocation
@@ -23,10 +22,10 @@ struct _Mem {
 	double SD;
 };
 
-Mem memory;
+Mem *memory;
 
 void mem_init (void) {
-        memory = malloc(MAX_ALLOC_SIZE);
+    memory = malloc(MAX_ALLOC_SIZE);
 	memory->first = NULL;
 	memory->last = NULL;
 	memory->current = NULL;
@@ -37,14 +36,14 @@ void mem_init (void) {
 	memory->SD = 0;
 }
 
-void insert_node (Node node) {
+void insert_node (Node *node) {
     if (memory->first == NULL) {
 	    memory->first = memory->last = node;
 	    memory->first->prev = memory->first->next = NULL;
 	} else {
 		node->prev = memory->last;
 		memory->last->next = node;
-	        memory->last = node;
+	    memory->last = node;
 	}
 	node->next = NULL;
 	node->freed = FALSE;
@@ -58,14 +57,10 @@ int mem_is_valid (void *address, char *caller) {
     memory->current = memory->first;
 	while (memory->current != NULL ) {
 	    if (memory->current->address == address && memory->current->caller == caller ) {
-	    	if(memory->current->freed == FALSE){
-		    return TRUE;
-	    	}
-	    	else{
-	    	    return FALSE;
-	    	}
+	    	if(memory->current->freed == FALSE) return TRUE;
+	    	else return FALSE;
 		}
-	          memory->current = memory->current->next;
+	    memory->current = memory->current->next;
 	}
 	return FALSE;
 }
@@ -77,15 +72,15 @@ void *slug_malloc (size_t size, char *WHERE) {
 
 	/* check that the allocation is of legal size */
 	if(size >= MAX_ALLOC_SIZE){
-		fprintf(stderr, "ERR: Cannot allocate more than 2^27-1 mb \n");
-		exit(1);
+		printf("ERR: Cannot allocate more than 2^27-1 mb \n");
+		return;
 	}
 	
     /* Allocate a node */
-    Node new_node = malloc(sizeof(Node));
+    Node *new_node = malloc(sizeof(Node));
 	/* Handles errors */
 	if (!new_node) {
-	    fprintf (stderr, "ERR(%s): Cannot create node\n", strerror (errno));
+	    printf("ERR(%s): Cannot create node\n");
 	    return;
     }
 	
@@ -94,11 +89,11 @@ void *slug_malloc (size_t size, char *WHERE) {
 	/* Handles errors */
 	if (!data_address) {
 	    free(new_node);
-	    fprintf (stderr, "ERR(%s): Cannot allocate %d in memory\n", strerror (errno), size);
+	    printf("ERR(%s): Cannot allocate %d in memory\n");
 	    return;
     }
 	/* Saves address and size */
-        new_node->address = data_address;
+    new_node->address = data_address;
 	new_node->block_size = size;
 	
 	/* Create time stamp */
@@ -108,7 +103,7 @@ void *slug_malloc (size_t size, char *WHERE) {
 	/* Saves caller info */
 	new_node->caller = WHERE;
 	
-        /* Insert node */
+    /* Insert node */
 	insert_node(new_node);
 	return data_address;
 }
@@ -117,23 +112,23 @@ void slug_free ( void *addr, char *WHERE ) {
 
     /* Check for memory validity, handles pointers, free memory and the node */
     if (mem_is_valid(addr, WHERE)) {
-	free(memory->current->address);
-	memory->current->freed = TRUE;
+	    free(memory->current->address);
+	    memory->current->freed = TRUE;
     }
 }
 
 void slug_memstats ( void ) {
-	int Num_active_alloc = 1;
+	int active_alloc = 1;
 	int total_active_size = 0;
 	int difference = 0;
         
-	Node node;
+	Node *node;
 	node = memory->first;
 	while(node != NULL){
 		if(node->freed == FALSE){
 			printf("allocation[%d] %s(%11d) - size: %d, address: % p \n", 
-		        	Num_active_alloca, node->caller, node->time_stamp, node->block_size, node->address);
-			Num_active_alloca++;
+		        	active_alloc, node->caller, node->time_stamp, node->block_size, node->address);
+			active_alloc++;
 			total_active_size += node->block_size;
 			node = node->next;
 		}
@@ -144,7 +139,19 @@ void slug_memstats ( void ) {
 	printf("----------------------------------------------------------\n");
 	printf("*****               Allocation Summary               *****\n");
 	printf("Total number of allocations done: %d\n", memory->num_alloca);
-	printf("Total number of active allocation: %d\n", Num_active_alloca);
+	printf("Total number of active allocation: %d\n", active_alloc);
+	printf("Total memory size of active allocation: %d\n", total_active_size);
+	printf("Mean: %f   SD: %f\n",memory->mean, memory->SD);
+	printf("----------------------------------------------------------\n");
+	
+	node = memory->first;
+	while(node != NULL){
+		if(node->freed == FALSE){
+			free(node->address);
+		}
+		free(node);
+		node = node->next;
+	}
 	printf("Total memory size of active allocation: %d\n", total_active_size);
 	printf("Mean: %f   SD: %f\n",memory->mean, memory->SD);
 	printf("----------------------------------------------------------\n");
@@ -158,3 +165,4 @@ void slug_memstats ( void ) {
 		node = node->next;
 	}
 }
+
