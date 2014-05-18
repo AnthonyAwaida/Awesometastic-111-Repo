@@ -12,7 +12,7 @@ int main(void){
 
     char *caller = "memtest:main";
 	/* regular allocation, no errors expected */
-	int *test1 = malloc(sizeof(int));
+	void *test1 = malloc(sizeof(int));
 
 	/* allocating zero space, expect message to stderr */
 	size_t empty = (size_t) 0;
