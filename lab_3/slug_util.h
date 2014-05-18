@@ -1,6 +1,4 @@
-#define MAX_ALLOC_SIZE (size_t) pow(2.0, 27.0)
-#define FALSE 0
-#define TRUE 1
+#include "slug_mem.h"
 
 #define FUNCTIONIZE(a,b) a(b)
 #define STRINGIZE(a) #a

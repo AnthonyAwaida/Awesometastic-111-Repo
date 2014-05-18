@@ -37,6 +37,8 @@ void mem_init (void) {
 }
 
 void insert_node (Node *node) {
+	if (memory == NULL) mem_init();
+	
     if (memory->first == NULL) {
 	    memory->first = memory->last = node;
 	    memory->first->prev = memory->first->next = NULL;
@@ -75,7 +77,7 @@ void *slug_malloc (size_t size, char *WHERE) {
 		printf("ERR: Cannot allocate more than 2^27-1 mb \n");
 		return;
 	}
-
+	
     /* Allocate a node */
     Node *new_node = malloc(sizeof(Node));
 	/* Handles errors */
@@ -83,7 +85,7 @@ void *slug_malloc (size_t size, char *WHERE) {
 	    printf("ERR(%s): Cannot create node\n");
 	    return;
     }
-
+	
 	/* Allocate memory */
 	data_address = malloc(size);
 	/* Handles errors */
@@ -92,24 +94,24 @@ void *slug_malloc (size_t size, char *WHERE) {
 	    printf("ERR(%s): Cannot allocate %d in memory\n");
 	    return;
     }
+	
 	/* Saves address and size */
     new_node->address = data_address;
 	new_node->block_size = size;
-
+	
 	/* Create time stamp */
 	time(&allocation_time);
 	new_node->time_stamp = allocation_time;
-
+	
 	/* Saves caller info */
 	new_node->caller = WHERE;
-
+	
     /* Insert node */
 	insert_node(new_node);
 	return data_address;
 }
 
 void slug_free ( void *addr, char *WHERE ) {
-
     /* Check for memory validity, handles pointers, free memory and the node */
     if (mem_is_valid(addr, WHERE)) {
 	    free(memory->current->address);
@@ -118,10 +120,15 @@ void slug_free ( void *addr, char *WHERE ) {
 }
 
 void slug_memstats ( void ) {
-	int active_alloc = 1;
+	/*printf("slug_memstats: inside\n");*/
+	int active_alloc = 0;
 	int total_active_size = 0;
 	int difference = 0;
-        
+
+	printf("----------------------------------------------------------\n");
+	printf("*****               Active Allocations               *****\n");
+	printf("----------------------------------------------------------\n");
+	
 	Node *node;
 	node = memory->first;
 	while(node != NULL){
@@ -130,54 +137,32 @@ void slug_memstats ( void ) {
 		        	active_alloc, node->caller, node->time_stamp, node->block_size, node->address);
 			active_alloc++;
 			total_active_size += node->block_size;
-			node = node->next;
 		}
 		difference += (pow(node->block_size - memory->mean, 2.0));
+		node = node->next;
 	}
+	/*printf("slug_memstats: exited loop\n");*/
 	memory->SD = sqrt(difference);
-
 	printf("----------------------------------------------------------\n");
 	printf("*****               Allocation Summary               *****\n");
+	printf("----------------------------------------------------------\n");
 	printf("Total number of allocations done: %d\n", memory->num_alloca);
 	printf("Total number of active allocation: %d\n", active_alloc);
-
-	printf("Total memory size of active allocation: %d\n", total_active_size);
+	printf("Total memory size of active allocations: %d\n", total_active_size);
 	printf("Mean: %f   SD: %f\n",memory->mean, memory->SD);
-	printf("----------------------------------------------------------\n");
-
+	
+	/*
 	node = memory->first;
 	while(node != NULL){
+		printf("slug_memstats: node = %d\n", node);
 		if(node->freed == FALSE){
 			free(node->address);
+			printf("slug_memstats: freed address\n");
 		}
 		free(node);
+		printf("slug_memstats: freed node\n");
 		node = node->next;
 	}
-
-	printf("Total memory size of active allocation: %d\n", total_active_size);
-	printf("Mean: %f   SD: %f\n",memory->mean, memory->SD);
-	printf("----------------------------------------------------------\n");
-
-	node = memory->first;
-	while(node != NULL){
-		if(node->freed == FALSE){
-			free(node->address);
-		}
-		free(node);
-		node = node->next;
-	}
-<<<<<<< HEAD
-
-=======
-<<<<<<< HEAD
-}
-=======
-<<<<<<< HEAD
-=======
->>>>>>> FETCH_HEAD
-	printf("Total memory size of active allocation: %d\n", total_active_size);
-	printf("Mean: %f   SD: %f\n",memory->mean, memory->SD);
-	printf("----------------------------------------------------------\n");
 	
 	node = memory->first;
 	while(node != NULL){
@@ -187,7 +172,6 @@ void slug_memstats ( void ) {
 		free(node);
 		node = node->next;
 	}
-
+	*/
 }
 
->>>>>>> FETCH_HEAD

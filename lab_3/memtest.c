@@ -10,19 +10,20 @@
 */
 int main(void){
 
-    char *caller = "memtest:main";
 	/* regular allocation, no errors expected */
-	void *test1 = malloc(sizeof(int));
+	int *test1 = (int *)malloc(sizeof(int));
+	slug_memstats();
+	slug_free(test1, "memtest.c:14");
 
 	/* allocating zero space, expect message to stderr */
 	size_t empty = (size_t) 0;
-	void *test2 = malloc(empty);
+	char *test2 = (char *)malloc(empty);
+	slug_memstats();
+	slug_free(test2, "memtest.c:20");
 
 	/* allocating >= 128mb, should print to stderr and end */
 	size_t too_much = MAX_ALLOC_SIZE;
-	void *test3 = malloc(too_much);
-
-	/* shouldn't be printed */
-	printf("don't print me\n");
+	char *test3 = (char *)malloc(too_much);
+	slug_memstats();
 	return 0;
 }
