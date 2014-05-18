@@ -6,7 +6,7 @@ all : ${EXE}
 
 ${EXE} : ${SRC}
 	gcc -o memtest memtest.c -lm slug_mem.c
-	
+
 clean :
 	- rm ${OBJ} 2>/dev/null
 

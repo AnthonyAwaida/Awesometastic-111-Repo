@@ -75,7 +75,7 @@ void *slug_malloc (size_t size, char *WHERE) {
 		printf("ERR: Cannot allocate more than 2^27-1 mb \n");
 		return;
 	}
-	
+
     /* Allocate a node */
     Node *new_node = malloc(sizeof(Node));
 	/* Handles errors */
@@ -83,7 +83,7 @@ void *slug_malloc (size_t size, char *WHERE) {
 	    printf("ERR(%s): Cannot create node\n");
 	    return;
     }
-	
+
 	/* Allocate memory */
 	data_address = malloc(size);
 	/* Handles errors */
@@ -95,14 +95,14 @@ void *slug_malloc (size_t size, char *WHERE) {
 	/* Saves address and size */
     new_node->address = data_address;
 	new_node->block_size = size;
-	
+
 	/* Create time stamp */
 	time(&allocation_time);
 	new_node->time_stamp = allocation_time;
-	
+
 	/* Saves caller info */
 	new_node->caller = WHERE;
-	
+
     /* Insert node */
 	insert_node(new_node);
 	return data_address;
@@ -144,7 +144,7 @@ void slug_memstats ( void ) {
 	printf("Total memory size of active allocation: %d\n", total_active_size);
 	printf("Mean: %f   SD: %f\n",memory->mean, memory->SD);
 	printf("----------------------------------------------------------\n");
-	
+
 	node = memory->first;
 	while(node != NULL){
 		if(node->freed == FALSE){
@@ -157,7 +157,7 @@ void slug_memstats ( void ) {
 	printf("Total memory size of active allocation: %d\n", total_active_size);
 	printf("Mean: %f   SD: %f\n",memory->mean, memory->SD);
 	printf("----------------------------------------------------------\n");
-	
+
 	node = memory->first;
 	while(node != NULL){
 		if(node->freed == FALSE){
@@ -166,7 +166,15 @@ void slug_memstats ( void ) {
 		free(node);
 		node = node->next;
 	}
+<<<<<<< HEAD
 
+=======
+<<<<<<< HEAD
+}
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> FETCH_HEAD
 	printf("Total memory size of active allocation: %d\n", total_active_size);
 	printf("Mean: %f   SD: %f\n",memory->mean, memory->SD);
 	printf("----------------------------------------------------------\n");
@@ -182,3 +190,4 @@ void slug_memstats ( void ) {
 
 }
 
+>>>>>>> FETCH_HEAD
