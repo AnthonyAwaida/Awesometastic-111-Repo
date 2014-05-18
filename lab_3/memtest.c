@@ -1,7 +1,6 @@
 #include <stdlib.h> 
 #include <stdio.h> 
-#include "slug_mem.h"
-
+#include "slug_util.h"
 
 /* needs to test the following functionality:
 	* regular allocation & freeing
@@ -11,6 +10,7 @@
 */
 int main(void){
 
+    char *caller = "memtest:main";
 	/* regular allocation, no errors expected */
 	int *test1 = malloc(sizeof(int));
 
@@ -24,4 +24,5 @@ int main(void){
 
 	/* shouldn't be printed */
 	printf("don't print me\n");
+	return 0;
 }
