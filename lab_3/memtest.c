@@ -1,6 +1,6 @@
 #include <stdlib.h> 
 #include <stdio.h> 
-#include "slug_mem.h"
+#include "slug_util.h"
 
 /* needs to test the following functionality:
 	* regular allocation & freeing
