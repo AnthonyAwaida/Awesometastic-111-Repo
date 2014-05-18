@@ -13,7 +13,7 @@
 
 int main(void){
 	srand(time(NULL));
-	int random = rand() % MAX_ALLOC_SIZE;
+	int random = rand() % (MAX_ALLOC_SIZE + 1);
 	int *invalid;
 
 	/* trying to deallocate an invalid address*/
