@@ -1,15 +1,23 @@
 SRC = slug_mem.c memtest.c
-EXE = memtest
+TST1 = memtest
+TST2 = memtest2
 OBJ = memtest.o slug_mem.o
 
-all : ${EXE}
+all : ${TST1} ${TST2}
 
-${EXE} : ${SRC}
+${TST1} : ${SRC}
 	gcc -o memtest memtest.c -lm slug_mem.c
+
+${TST2} : ${SRC}
+	gcc -o memtest2 memtest2.c -lm slug_mem.c
 	
 clean :
-	- rm ${OBJ} 2>/dev/null
+	- rm ${TST1} ${TST2} ${OBJ} 2>/dev/null
 
-run :
-	make clean
-	./${EXE}
+run_1 :
+	- rm ${OBJ} 2>/dev/null
+	./${TST1}
+
+run_2 :
+	- rm ${OBJ} 2>/dev/null
+	./${TST2}
