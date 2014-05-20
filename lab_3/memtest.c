@@ -19,12 +19,12 @@ int main(void){
 	size_t empty = (size_t) 0;
 	char *test2 = (char *)malloc(empty);
 
+   malloc(sizeof(char) * 16);
+   malloc(sizeof(char) * 13);
+   malloc(sizeof(char) * 11);
+
 	/* allocating >= 128mb, should print to stderr and end */
 	size_t too_much = MAX_ALLOC_SIZE;
 	char *test3 = (char *)malloc(too_much);
-
-   malloc(sizeof(int) * 4);
-   malloc(sizeof(int) * 3);
-   malloc(sizeof(int) * 2);
 	exit(0);
 }

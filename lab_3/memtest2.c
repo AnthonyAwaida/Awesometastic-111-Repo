@@ -17,7 +17,7 @@ int main(void){
 
 	/* trying to deallocate an invalid address*/
 	printf("***** Test for invalid address  *****\n");
-	size = sizeof(char) * (rand() % (MAX_ALLOC_SIZE));
+	size = sizeof(char) * (rand() % (20));
 	printf("Allocating %d Bytes\n", size);
 	int *test1 = (int *)malloc(size);
 	free(test1);
@@ -25,7 +25,7 @@ int main(void){
 	
 	/*trying to deallocate an already freed region*/
 	printf("***** Test for already freed region  *****\n");
-	size = sizeof(char) * (rand() % (MAX_ALLOC_SIZE));
+	size = sizeof(char) * (rand() % (20));
 	printf("Allocating %d Bytes\n", size);
 	int *test2 = (int *)malloc(size);
 	free(test2);
@@ -33,10 +33,10 @@ int main(void){
 	
 	/*trying to deallocate a valid region by passing in a pointer inside the region*/
 	printf("***** Test for valid region  *****\n");
-	size = sizeof(char) * (rand() % (MAX_ALLOC_SIZE));
+	size = sizeof(char) * (rand() % (20));
 	printf("Allocating %d Bytes\n", size);
 	int *test3 = (int *)malloc(size);
-	size = sizeof(char) * (rand() % (MAX_ALLOC_SIZE));
+	size = sizeof(char) * (rand() % (20));
 	printf("Allocating %d Bytes\n", size);
 	int *test4 = (int *)malloc(size);
 	

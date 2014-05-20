@@ -15,7 +15,6 @@ struct _Mem {
     Node *first;
 	Node *last;
 	Node *current;
-	int mem_size;
 	int act_alloca;
 	int num_alloca;  //added this for counter total # of allocations done overall.
 	int total_size;  //added for calculating the mean and SD of all allocation
@@ -30,7 +29,6 @@ void mem_init (void) {
 	memory->first = NULL;
 	memory->last = NULL;
 	memory->current = NULL;
-	memory->mem_size = MAX_ALLOC_SIZE;
 	memory->act_alloca = 0;
 	memory->num_alloca = 0;   //added this for counting total # of allocations done overall.
 	memory->total_size = 0;
@@ -82,7 +80,7 @@ void *slug_malloc (size_t size, char *WHERE) {
 	/* check that the allocation is of legal size */
 	if (size >= MAX_ALLOC_SIZE){
 		printf("%s: Cannot allocate more than 128MB \n", WHERE);
-		return;
+		slug_exit(1);
 	} else if (size <= 0) {
 	    printf("%s: Non-sense to allocate a memory of size %d\n", WHERE, size);
 		return;
@@ -145,7 +143,7 @@ void slug_memstats ( void ) {
 	node = memory->first;
 	while(node != NULL){
 		if(node->freed == FALSE){
-			printf("allocation[%d] %s(%11d) - size: %d, address: % p \n", 
+			printf("allocation[%d] %s(%11d) - size: %d, address: %p \n", 
 		        	active_alloc, node->caller, node->time_stamp, node->block_size, node->address);
 			active_alloc++;
 			total_active_size += node->block_size;
@@ -153,18 +151,20 @@ void slug_memstats ( void ) {
 		difference += (pow(node->block_size - memory->mean, 2.0));
 		node = node->next;
 	}
-	memory->SD = sqrt(difference);
+	memory->SD = sqrt((double)difference / memory->num_alloca);
 	printf("----------------------------------------------------------\n");
 	printf("*****               Allocation Summary               *****\n");
 	printf("----------------------------------------------------------\n");
-	printf("Total number of allocations done: %d\n", memory->num_alloca);
-	printf("Total number of active allocation: %d\n", memory->act_alloca);
-	printf("Total memory size of active allocations: %d\n", total_active_size);
-	printf("Mean: %f   SD: %f\n",memory->mean, memory->SD);
+	printf("Total number of allocations done: %u\n", memory->num_alloca);
+	printf("Total number of active allocation: %u\n", memory->act_alloca);
+	printf("Total memory size of active allocations: %u\n", total_active_size);
+	printf("Mean: %lf   SD: %lf\n", memory->mean, memory->SD);
 }
 
-void slug_exit(void) {
-    if (memory != NULL && memory->act_alloca > 0)
+void slug_exit(int exit_status) {
+    if (memory != NULL)
 		slug_memstats();
+	printf("Exiting with status %d \n", exit_status);
+	exit(exit_status);
 }
 
