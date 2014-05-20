@@ -15,7 +15,6 @@ struct _Mem {
     Node *first;
 	Node *last;
 	Node *current;
-	int mem_size;
 	int act_alloca;
 	int num_alloca;  //added this for counter total # of allocations done overall.
 	int total_size;  //added for calculating the mean and SD of all allocation
@@ -30,7 +29,6 @@ void mem_init (void) {
 	memory->first = NULL;
 	memory->last = NULL;
 	memory->current = NULL;
-	memory->mem_size = MAX_ALLOC_SIZE;
 	memory->act_alloca = 0;
 	memory->num_alloca = 0;   //added this for counting total # of allocations done overall.
 	memory->total_size = 0;
@@ -82,7 +80,7 @@ void *slug_malloc (size_t size, char *WHERE) {
 	/* check that the allocation is of legal size */
 	if (size >= MAX_ALLOC_SIZE){
 		printf("%s: Cannot allocate more than 128MB \n", WHERE);
-		return;
+		slug_exit(1);
 	} else if (size <= 0) {
 	    printf("%s: Non-sense to allocate a memory of size %d\n", WHERE, size);
 		return;
@@ -163,8 +161,10 @@ void slug_memstats ( void ) {
 	printf("Mean: %f   SD: %f\n",memory->mean, memory->SD);
 }
 
-void slug_exit(void) {
-    if (memory != NULL && memory->act_alloca > 0)
+void slug_exit(int exit_status) {
+    if (memory != NULL)
 		slug_memstats();
+	printf("Exiting with status %d \n", exit_status);
+	exit(exit_status);
 }
 

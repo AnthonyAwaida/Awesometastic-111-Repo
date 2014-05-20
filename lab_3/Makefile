@@ -6,10 +6,10 @@ OBJ = memtest.o slug_mem.o
 all : ${TST1} ${TST2}
 
 ${TST1} : ${SRC}
-	gcc -o memtest memtest.c -lm slug_mem.c
+	gcc -o memtest memtest.c  slug_mem.c -lm
 
 ${TST2} : ${SRC}
-	gcc -o memtest2 memtest2.c -lm slug_mem.c
+	gcc -o memtest2 memtest2.c slug_mem.c -lm
 	
 clean :
 	- rm ${TST1} ${TST2} ${OBJ} 2>/dev/null
