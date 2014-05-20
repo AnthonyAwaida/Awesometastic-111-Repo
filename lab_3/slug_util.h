@@ -8,4 +8,4 @@
 #define malloc(s) slug_malloc((s), FILE_POS)
 #define free(s) slug_free((s), FILE_POS)
 #define memstats() slug_memstats()
-#define exit(s) slug_exit(s)
+#define exit(s) slug_exit()
