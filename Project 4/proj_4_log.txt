@@ -1,0 +1,101 @@
+Author: Falcon
+
+/usr/src/servers/hgfs
+table.c:
+	NREQS to NREQS-1 because NREQS 33 incrase to 34
+	If not, Array size is negative
+
+/usr/src/servers/mfs
+proto.h:
+	Prototypes:
+		fs_meta_readwrite()
+table.c:
+	Macro:
+		FS_META_READWRITE as 33
+read.c:
+	Prototypes:
+		FORWARD _PROTORTYPE rw_metachunk():
+			doesn't use position parameter
+	Function Definitions:
+		fs_meta_readwrite():
+			find_inode(): returns an inode for use
+			set variables from message: rip, rw_flag, gid, position, nrbytes
+			set variables from inode access: scale, bp, size of each block in the zone
+			check izone[9]:
+				if NO_ZONE:
+					WRITING:
+						alloc_zone to initialize memory space
+						set struct bp which contains the block and relevant info
+					READING:
+						indicate invalid read
+						clear block space
+				else:
+					LOOP:
+						loops through chunks of data
+						uses metaread or metawrite processing each chunk of data
+						adjust counters and pointers for next chunk of data
+		rw_metachunk():
+			set variables from inode access: scale, bp, size of each block in the zone
+				READING:
+					sys_savecopyto() to retrieve data from userspace to mfs and store in b_data
+				WRITING:
+					sys_savecopyfrom() to send data from mfs to userspace
+					
+/usr/src/include/minix
+callnr.h:
+	Macro:
+		#define METAREAD	105
+		#define METAWRITE	106
+vfsif.h:
+	Macro:
+		#define REQ_META_READWRITE (VFS_BASE + 33)
+		#define NREQS 34
+		#define REQ_META m9_s4
+		#define REQ_BUFF m9_s2
+/usr/src/commands:
+	Folders:
+		/metacat:
+		/metatag:
+/usr/src/lib/libc/posix:
+	_metaread.c:
+		
+	_metawrite.c:
+		
+	Makefile.inc:
+		Counter:
+		_metaread.c \
+		_metawrite.c \
+
+/usr/src/servers/vfs:
+	table.c:
+		Enum:
+			do_metaread 105
+			do_metawrite 106
+	proto.h:
+		Prototype:
+			_PROTOTYPE int do_metaread()
+			_PROTOTYPE int do_metawrite()
+			_PROTOTYPE int req_readwrite(..., meta, buff)
+			_PROTOTYPE int read_write(..., meta)
+	read.c:
+		Definition:
+			do_read(..., 0):
+			do_metaread(..., 1234):
+			do_metawrite(...., 1234):
+			read_write():
+				regular files:
+					req_readwrite(..., meta, m_in.m1_p1):
+			rw_pipe():
+				req_readwrite(..., 0, 0):
+	write.c:
+		Definition:
+			do_write(..., 0):
+	exec.c:
+		Definition:
+			req_readwrite():
+	request.c:
+		Definition:
+			req_readwrite(..., meta, buff):
+				Load meta and buff (obsolete) into message
+
+test files:
