@@ -1,4 +1,4 @@
-Author: Falcon
+Notes for Project 4
 
 /usr/src/servers/hgfs
 table.c:
@@ -52,19 +52,6 @@ vfsif.h:
 		#define NREQS 34
 		#define REQ_META m9_s4
 		#define REQ_BUFF m9_s2
-/usr/src/commands:
-	Folders:
-		/metacat:
-		/metatag:
-/usr/src/lib/libc/posix:
-	_metaread.c:
-		
-	_metawrite.c:
-		
-	Makefile.inc:
-		Counter:
-		_metaread.c \
-		_metawrite.c \
 
 /usr/src/servers/vfs:
 	table.c:
