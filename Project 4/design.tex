@@ -1,0 +1,324 @@
+%----------------------------------------------------------------------------------------
+%	SETUP
+%----------------------------------------------------------------------------------------
+\documentclass[paper=a4, fontsize=11pt]{scrartcl} 
+
+\usepackage{titlesec}
+
+\setcounter{secnumdepth}{4}
+
+\titleformat{\paragraph}
+{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}
+{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
+\usepackage{listings}
+\usepackage[T1]{fontenc} 
+\usepackage{fourier} 
+\usepackage[english]{babel} 
+\usepackage[UKenglish]{datetime}
+\usepackage{amsmath,amsfonts,amsthm} 
+
+\usepackage{lipsum} 
+\usepackage{sectsty} % Allows customizing section commands
+\allsectionsfont{\centering \normalfont} % Make all sections centered, the default font and small caps
+
+\usepackage{fancyhdr} % Custom headers and footers
+\pagestyle{fancyplain} % Makes all pages in the document conform to the custom headers and footers
+\fancyhead{} % No page header - if you want one, create it in the same way as the footers below
+\fancyfoot[L]{} % Empty left footer
+\fancyfoot[C]{} % Empty center footer
+\fancyfoot[R]{\thepage} % Page numbering for right footer
+\renewcommand{\headrulewidth}{0pt} % Remove header underlines
+\renewcommand{\footrulewidth}{0pt} % Remove footer underlines
+\setlength{\headheight}{13.6pt} % Customize the height of the header
+
+
+\usepackage{mathtools}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+
+\numberwithin{equation}{section} % Number equations within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{figure}{section} % Number figures within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{table}{section} % Number tables within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+
+\setlength\parindent{0pt} 
+
+%----------------------------------------------------------------------------------------
+%	TITLE 
+%----------------------------------------------------------------------------------------
+
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}} % Create horizontal rule command with 1 argument of height
+
+\title{	
+\normalfont \normalsize 
+\textsc{University of California, Santa Cruz\\CMPS 111: Operating Systems\\Professor Nathan Whitehead\\Spring 2014} \\ [25pt] % Your university, school and/or department name(s)
+\horrule{0.5pt} \\[0.4cm] % Thin top horizontal rule
+\huge Programming Project 4:\\ Extending a Filesystem \\ % The assignment title
+\horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
+}
+
+\author{{\bf Team Awesometastic} \\Kevin Andres, Jeffrey Deng, Benjamin Gordon, Xiaoli Tang, Wai Wong} % Your name
+
+\date{\normalsize\today} % Today's date or a custom date
+
+\begin{document}
+
+\maketitle % Print the title
+
+%----------------------------------------------------------------------------------------
+%	SECTION 1 - PURPOSE
+%----------------------------------------------------------------------------------------
+
+
+\section{Changes to Original Design}
+Since the first design, we've focused our attention on getting VFS to pass messages to MFS successfully. System calls to VFS should have a file descriptor argument, which can be checked by VFS so it can find an inode and then pass a message to another filesystem server. We have thought of methods that make it possible for the library function {\it metaread()} can use a system call to dispatch to VFS {\it do\_metaread} to call {\it req\_metaread} which packages a message to be sent to MFS {\it fs\_metaread}.
+
+
+
+
+
+\section{Purpose}
+In this project, our goal is to extend the MINIX filesystem to include a {\it metadata} area for each file. Such an area can be used to store other information about a file that is separate from the normal file contents (and can hold up to 1024 bytes). We are to design system calls for user space processes which allows for both the reading and writing of metadata and to add a metadata to files that do not already have one. We will also create tools to allow users to access the metadata areas conviniently.
+
+%----------------------------------------------------------------------------------------
+%	SECTION 2 - DESIGN
+%----------------------------------------------------------------------------------------
+
+\section{Design}
+In order to effectively approach creating a new metadata region and to allow system calls for the user to read and write to files' metadata region, we must utilize the {\it virtual file system server} (VFS). This server accepts filesystem syscall requests and passes them to an actual filesystem server. In this project, we will use the MINIX filesystem server (MFS) to handle the disk filesystems.
+
+
+	\subsection{System call}
+	In order for userspace processes to communicate with a filesystem, we must be able to create a syscall that can be routed through VFS. This system call should be able to:
+		\begin{itemize}
+			\item Create a new metadata region if one is not present
+			\item Write data to a file's metadata region.
+			\item Read data from a file's metadata region. 
+		\end{itemize}
+	We can add a system call to VFS similar to {\it read()} and {\it write()} and will have arguments 		including:
+		\begin{itemize}
+			\item a file descriptor
+			\begin{itemize}
+				\item VFS can map this to a {\it vnode}, which is a reference to an {\it inode} in MFS.
+			\end {itemize}
+			\item a pointer to memory
+			\item the number of bytes to be read or written.
+		\end{itemize}
+	We will need to add a message type for reading and writing the metadata region, and a message can be passed to MFS once VFS checks the arguments.
+
+
+	\subsection{Managing Metadata}
+	We will need to keep track of metadata. Metadata points to a space in memory and a file may or may not have it. There are four cases of interacting with metadata:
+		\begin{itemize}
+			\item reading metadata from a file that has it.
+			\item writing metadata to a file that has it.
+			\item reading metadata from a file that does {\it not} have metadata.
+			\item writing metadata to a file that does {\it not} have metadata.
+		\end{itemize}
+
+		\subsubsection{Inode structure}
+		We will allocate an unused data block in the inode:
+			\begin{itemize}
+				\item If a block is not already allocated, use get\_block() to safely do so.
+			\end{itemize}
+		If it is already allocated, proceed to write the data normally. \\
+
+	We can use the last zone pointer in the inode (zone 9), which is a triple indirection pointer, as the {\it sticky bit}. Since it is unlikely that the file system will use it, we will utilize this as the sticky bit for storing metadata. As this field is initialized to zero, adding metadata sets the sticky bit, and if metadata is read, the sticky bit can be checked:
+
+			\begin{itemize}
+				\item If the sticky bit is set, metadata already exists and represents the metadata itself.
+				\item If the sticky bit is not set, there is no metadata and is kept initialized to zero.
+			\end{itemize}
+
+		\subsubsection{Vnode}
+		Vnode of a file does not contain the pointer of the inode associated with the file. However, we can obtain access to the inode via the message protocol. By including a new message type, we can invoke system calls in MFS which returns the inode.
+
+
+	\subsection{Interface}
+	We will create command line tools for the read and write of metadata by simply invoking our metaread() and metawrite() system calls. To simplify the design, we will first run the commands as a program. If time permitted, we will implement the kernel calls by modifying system.c and system.h to include the custom commands.
+
+%----------------------------------------------------------------------------------------------------------------------
+
+
+%----------------------------------------------------------------------------------------
+%	SECTION 3 - IMPLEMENTATION
+%----------------------------------------------------------------------------------------
+
+\section{Implementation}
+The coding for this program should pretty much only be implemented in the following areas:
+	\begin{itemize}
+		\item User space test programs
+		\item Library functions wrapping the syscalls
+		\item The implementation of the syscalls in the filesystem (VFS, MFS)
+		\item Changes to MINIX (including header files and servers)
+	\end{itemize}
+
+We will deal with the following files:
+	\begin{itemize}
+		\item table.c (from /usr/src/servers/vfs/table.c)
+		\item proto.h (from /usr/src/servers/vfs/proto.h)
+		\item proto.h (from /usr/src/servers/mfs/proto.h)
+		\item vfsif.h (from /usr/src/include/minix.vfsif.h)
+		\item callnr.h (from /usr/src/include/minix/callnr.h)
+		\item exec.c (from from /usr/src/servers/vfs/exec.c)
+		\item write.c (from /usr/src/servers/vfs/write.c)
+		\item read.c (from /usr/src/servers/vfs/read.c)
+		\item read.c (from /usr/src/servers/mfs/read.c)
+		\end {itemize}
+The two files {\it write.c} and {\it read.c} in this VFS server folder will include our implementation of our system calls.
+
+
+	\subsection{table.c}
+	In this file, there are some {\it unused} entries for system calls. We will use a couple of these entries for the system calls we will create for this project:
+		\begin{itemize}
+			\item In entry 105, we will have {\it do\_metaread}
+			\item In entry 106, we will have {\it do\_metawrite}
+		\end{itemize}
+
+
+	\subsection{proto.h (VFS)}
+	We will of course add the prototypes of these system calls at the end of this file as well:
+		\begin{itemize}
+			\item \_PROTOTYPE( int do\_metaread, (void));
+			\item \_PROTOTYPE( int do\_metawrite, (void));
+		\end{itemize}
+
+
+	\subsection{proto.h (MFS)}
+	We will add the prototype for MFS as well:
+		\begin{itemize}
+			\item fs \_meta\_readwrite()
+		\end{itemize}			
+	
+	\subsection{vfsif.h}
+	We will define macros:
+	\begin{itemize}
+	\item \#define REQ\_META\_READWRITE (VFS\_BASE + 33)
+	\item \#define NREQS 34
+	\item \#define REQ\_META m9\_s4
+	\item \#define REQ\_BUFF m9\_s2
+	\end{itemize}
+	
+	\subsection{callnr.h}
+	We will define macros for these system calls as well:
+		\begin{itemize}
+			\item \#define METAREAD 105
+			\item \#define METAWRITE 106
+		\end{itemize}
+	
+	\subsection{exec.c}
+	Here, we redefine {\it req\_readwrite}  with 0,0 to fill up the two new parameters.
+
+	\subsection{write.c}
+	At the VFS level, when it comes to writing metadata, we will deal with creating the system call {\it do\_metawrite}, as well as the function {\it read\_write()} to actually call the {\it WRITE} system call.
+		\begin{itemize}
+	
+			\item From the userspace processes called {\it metawrite}, {\it do\_metawrite} receives the message (whatever nees to be written to the file).
+			\item The function {\it do\_metawrite} will call the function {\it read\_write()}.
+				\begin{itemize}
+				\item We add 0 as a parameter for read\_write() for metadata.
+					\item {\it do\_metawrite} will handle the message and interpret it so that it can be passed to {\it read\_write}
+				\end{itemize}
+			\item In {\it read\_write} we can check whether a file has metadata or not.
+				\begin{itemize}
+					\item This of course utilizes the {\it sticky bit} inside the inode structure (as discussed in the design section).
+				\end{itemize}
+			\item {\it read\_write} will pass the message into zone 9 of an inode, which points to the allocation of the metadata that we want to store.
+			\item From here we can deal with the MFS-level process {\it write\_map()}
+				\begin{itemize}
+					\item This will actually allow writing to metadata for this file system.
+				\end{itemize}
+		\end{itemize}
+
+
+	\subsection{read.c (VFS)}
+	We will of course take a similar approach in terms of reading metadata.
+		\begin{itemize}
+			\item A program can call {\it metaread} which calls for metadata to be read from a file.
+			\item We need to check if metadata even exists for the file at this point
+				\begin{itemize}
+					\item We check for the sticky bit, and if it is set, then it does indeed exist.
+				\end{itemize}
+			\item The system call {\it do\_metaread} is called, which in turn calls {\it read\_write} which calls the {\it READ} system call.
+			\item The MFS-level process {\it read\_map()} allows metadata from a file to be read.
+		\end{itemize}
+
+	\subsection{read.c (MFS)}
+	We focused on two important functions in this file:
+		\begin{itemize}
+			\item fs\_meta\_readwrite() 
+			\item rw\_metachunk()
+		\end{itemize}
+		
+		\subsubsection{fs\_meta\_readwrite()}
+		We used find\_inode() to return an inode for use. From inode access, we set variables {\it scale}, {\it bp}, size of each block in the zone. We set {\it scale} to the size of the zone. We set variable {\it block size} equal to inode's block size. We set {\it f\_size} to inode's {\it i\_size}.\\\\
+		We also had to set all the variables based on the {\it fs\_m\_in}, which is the global variable of message in: {\it rw\_flag}, {\it gid}, {\it position}, and {\it nrbytes}.\\\\
+		We want to check if inode's izone 9 is empty (which is indicated by NO\_ZONE).
+		\begin{itemize}
+	
+		\item If it is empty:
+		\begin{itemize}
+		\item and we are {\it writing}, we will use alloc\_zone() to define the memory space and then set struct bp which contains the block and the relevant information.
+		\item and we are {\it reading}, we will print an error message and 0 block.
+		\end{itemize}	
+		\item If it is {\it not} empty:
+		\begin{itemize}
+		\item We will loop through the chunks of data (while {\it nrbytes > 0}) and use metaread or metawrite to process each chunk of data and adjust counters and pointers for next chunk of data.
+		\end{itemize}	  
+\end{itemize}
+{\bf Arguments and return value:}
+\begin{itemize}
+\item Arguments: This function takes no arguments
+\item Return Value: Returns OK
+\end{itemize}
+
+
+		
+		\subsubsection{rw\_metachunk()}	
+		This function sets {\it scale} to the size of the zone. We will set bp and check if it is null (block is not there).
+		\begin{itemize}
+		\item If we are reading:
+			\begin{itemize}
+			\item we will perform perform {\it sys\_safecopyto()} to retrieve data from userspace and store in bp->b\_data.
+			\end{itemize}
+		\item If we are writing:
+			\begin{itemize}
+			\item we will perform {\it sys\_safecopyfrom()} to pass data from MFS to user space.
+			\end{itemize}
+		\end{itemize}
+
+\subsection{Commands}
+We created two new folders for the commands:
+\begin{itemize}
+\item metacat
+\item metatag
+\end{itemize}
+{\it Metacat} functions similarly to {\it cat} while {\it metatag} essentially relies on {\it metawrite}. {\it Metacat} allows the user to call from the command line and read metadata, while {\it metatag} is called from the command line to write to it.
+
+
+%----------------------------------------------------------------------------------------
+
+%----------------------------------------------------------------------------------------
+%	SECTION 4 - TESTING
+%----------------------------------------------------------------------------------------
+
+\section{Testing}
+In order to show that the requirements for this project our met we must be able to:
+	\begin{itemize}
+		\item demonstrate compatibility with the existing MINIX filesystem (either by showing  existing files not being corrupted for a change in MFS, or by showing your alternate filesystem mounted alonside MFS).
+		\item demonstrate adding a note "This file is awesome!" to a README.txt file, and later 
+reading back the note.
+		\item demonstrate that changing the regular file contents does not change the extra 
+metadata.
+		\item demonstrate that changing the metadata does not change the regular file contents.
+		\item demonstrate that copying a file with metadata copies the metadata.
+		\item demonstrate that changing the metadata on the original file does not modify the 
+metadata of the copied file. 
+		\item demonstrate that creating 1000 files, adding metadata to them, then deleting them 
+does not decrease the free space on the filesystem.
+	\end{itemize}
+
+
+\end{document}
